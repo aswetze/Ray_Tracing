@@ -37,13 +37,13 @@ function raytrace!(du, u, p, t)
     q = u[1]
     r = u[2]
     θ = u[3]
-    freq = p[1]
+    μ2 = u[4]
+    freq = 8.e6
 
-    μ2, dμ2_dr = index_refraction_no_b(r, freq, ["QP", 5.e11, 300, 50])
-
-    du[1] = dμ2_dr/2 + (μ2-q^2)/r
+    du[1] = index_refraction_no_b(r, freq, ["QP", 5.e11, 300, 50])[2]*q/2 + (μ2-q^2)/r
     du[2] = q
     du[3] = sqrt(μ2-q^2)/r
+    du[4] = index_refraction_no_b(r, freq, ["QP", 5.e11, 300, 50])[2]*q
 end
 
 
@@ -52,19 +52,18 @@ end
 r0 = 6371.e3
 Q0 = sin(π/4)
 θ0 = 0.0
+μ20 = 1.0
 
-u0 = Float64[Q0; r0; θ0]
-p = [8.e6]
+u0 = Float64[Q0; r0; θ0; μ20]
 tspan = (0.0f0,12000.f0)
-dtmax = .02
 prob = ODEProblem(raytrace!, u0, tspan)
-@time sol = solve(prob, Tsit5())
+@time sol = solve(prob, Euler(), dt = 10e3, abstol=1e-6, dtmax = 10e3)
 #println("sol1 = ")
 #println(sol[1,:])
-println("sol2 = ")
-println(sol[2,:] .- 6371e3)
+#println("sol2 = ")
+#println(sol[2,:] .- 6371e3)
 #println("sol3 = ")
 #println(sol[3,:])
-println("sol.t")
-println(sol.t)
+#println("sol.t")
+#println(sol.t)
 plot(sol.t .* 6371e3, sol[2,:] .- 6371e3)
