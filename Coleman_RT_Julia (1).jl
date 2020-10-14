@@ -37,11 +37,11 @@ function raytrace!(du, u, p, t)
     q = u[1]
     r = u[2]
     θ = u[3]
-    μ2, dμ2_dr = index_refraction_no_b(6371e3, 8.e6, ["QP", 5.e10, 300, 50])
+    μ2, dμ2_dr = index_refraction_no_b(r, 8.e6, ["QP", 5.e10, 300, 50])
 
-    du[1] = dμ2_dr/2 + (μ2-r^2)/θ
+    du[1] = dμ2_dr/2 + (μ2-q^2)/r
     du[2] = q
-    du[3] = sqrt(μ2-r^2)/θ
+    du[3] = sqrt(μ2-q^2)/r
 end
 
 
