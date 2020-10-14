@@ -37,7 +37,9 @@ function raytrace!(du, u, p, t)
     q = u[1]
     r = u[2]
     θ = u[3]
-    μ2, dμ2_dr = index_refraction_no_b(r, 8.e6, ["QP", 5.e10, 300, 50])
+    freq = p[1]
+
+    μ2, dμ2_dr = index_refraction_no_b(r, freq, ["QP", 5.e11, 300, 50])
 
     du[1] = dμ2_dr/2 + (μ2-q^2)/r
     du[2] = q
@@ -52,11 +54,14 @@ Q0 = sin(π/4)
 θ0 = 0.0
 
 u0 = Float64[Q0; r0; θ0]
+p = [8.e6]
 tspan = (0.0f0,12000.f0)
+dtmax = .02
 prob = ODEProblem(raytrace!, u0, tspan)
 @time sol = solve(prob, Tsit5())
+#println("sol1 = ")
 #println(sol[1,:])
-#println("sol2 = ")
+println("sol2 = ")
 println(sol[2,:] .- 6371e3)
 #println("sol3 = ")
 #println(sol[3,:])
