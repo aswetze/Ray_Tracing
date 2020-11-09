@@ -68,16 +68,20 @@ function raytrace!(du, u, p, t)
 
     #μ^2 = -0.581709 + (-1.68825*10^-14 + 1.26537*10^-21 r) r
     #dμ2/dr = -0.00844126 + 1.26537*10^-9 r
-
-    du[1] = (-.00844126+1.26537*10^-9*r)/2 + ((-.0581709 + (-1.68825*10^-14+1.26537*10^-21*r)*r)-q^2)/r
+    if r > 6621000 && r < 6721000
+        du[1] = (-.00844126+1.26537*10^-9*r)/2 + ((-.0581709 + (-1.68825*10^-14+1.26537*10^-21*r)*r)-q^2)/r
+        du[3] = sqrt(abs((-.0581709 + (-1.68825*10^-14+1.26537*10^-21*r)*r)-q^2))/r
+    else
+        du[1] = (-3.225616*10^-43)/2 + (1-q^2)/r
+        du[3] = sqrt(abs(1 - q^2)) / r
+    end
     du[2] = q
-    du[3] = sqrt(abs((-.0581709 + (-1.68825*10^-14+1.26537*10^-21*r)*r)-q^2))/r
 end
 
 #u0 = Float64[q0, r0, Θ0]
 u0 = Float64[sin(π/4); 6371.e3; 0.0]
-tspan = (0.0f0, 7480.0f0)
-prob = ODEProblem(raytrace!, u0, tspan, dtmax=1)
+tspan = (0.0f0, 748000.0f0)
+prob = ODEProblem(raytrace!, u0, tspan, dtmax=100)
 sol = solve(prob)
 #plot(sol)
 # println(sol[1,:])
@@ -88,4 +92,4 @@ sol = solve(prob)
 # println("sol.t")
 # println(sol.t)
 # println(sol[2,:].-6371e3)
-plot(sol.t .* 6371, sol[2,:] .- 6371e3)
+plot(sol.t .* 6371, sol[2,:].-6371.e3)
