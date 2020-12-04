@@ -2,8 +2,6 @@ import numpy
 import matplotlib.pylab as plt
 import scipy.integrate
 import sys
-from timeit import default_timer as timer
-
 
 
 def qpne(r, nm, hm, ym):
@@ -44,6 +42,7 @@ def index_refraction_no_b(r, freq, iono_params):
         dmu2_dr = -2. * x * dx_dr
         return mu2, dmu2_dr
     else:
+        print("************************** Index Refraction Failed **************************")
         return "nan", "nan"
 
 
@@ -61,8 +60,8 @@ def lagrangian(t, x, args):
     # P1 is the group delay
     dq_dp1 = dmu2_dr / 2. + (mu2 - q * q) / r  # equation 10
     dr_dp1 = q
-    dtheta_dp1 = numpy.sqrt(mu2 - q * q) / r
 
+    dtheta_dp1 = numpy.sqrt(mu2 - q * q) / r
     #     print(y)
     y[0] = dr_dp1
     y[1] = dtheta_dp1
@@ -70,18 +69,7 @@ def lagrangian(t, x, args):
     return y
 
 
-# Constant Initialization
-Nm = 5.e11
-Ym = 50.
-Hm = 300.
-frequency = 5.e6
-
-rTest = numpy.arange(6371., 6700., 1.) * 1000.
-for ii in rTest:
-    Ne, dNedr = qpne(ii, Nm, Hm, Ym)
-
-IonoParams = numpy.array(['QP', Nm, Hm, Ym])
-
+# ********************* MAIN *********************
 
 # set initial conditions
 Elevation = 45.
@@ -90,24 +78,17 @@ rInitial = 6371.e3
 thetaInitial = 0.
 x0 = numpy.array([rInitial, thetaInitial, Qinitial])
 
-
 # set parameters
 frequency = 8.e6
 Nm = 5.e11
 Ym = 50.
 Hm = 300.
-r = 6371.e3
-
 IonoParams = numpy.array(['QP', Nm, Hm, Ym])
-# set initial vector
-
 
 t0 = 0.
 # initalize ode integration with adapative step size
 # little help from other program...
 # need to help each time
-
-
 rdopri = scipy.integrate.ode(lagrangian).set_integrator('dopri5', atol=1e-6, first_step=10e3, max_step=10e3, dfactor=0.1, nsteps=1, )
 rdopri.set_f_params((frequency, IonoParams))
 rdopri.set_initial_value(x0, t0)
@@ -119,12 +100,9 @@ tIntLimit = 8000.*1e3
 T = t0
 
 
-
 while T < tIntLimit:
     tx = rdopri.integrate(tIntLimit, step=True)
-    #print(tx)
     T = rdopri.t
-    #print(T)
     t1[K] = rdopri.t
     X[:, K] = tx
     K += 1
@@ -136,19 +114,13 @@ while T < tIntLimit:
         break
 
 
+# ********************* OUTPUT *********************
+
 dist = X[1, :]*6371e3
 height = X[0, :] - 6371e3
-aa = X[1,:]
-bb = X[0,:]
-# plt.figure(dpi=300)
+plt.figure(dpi=300)
 plt.plot(dist, height, 'k.')
 plt.savefig("plots.pdf")
-plt.plot(aa,bb,'b.')
-plt.savefig("plots1.pdf")
 
-#print("Dist = ")
-#print(X[1, :])
-#print("Height = ")
-#print(X[0, :] - 6371e3)
-
-print([X[1,i + 1] - X[1,i] for i in range(len(X[1,:])-1)])
+# ********************* END *********************
+sys.stdout.close()
